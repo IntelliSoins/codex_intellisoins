@@ -109,3 +109,35 @@ pub fn web_results(query: &str) -> Vec<WebSearchResult> {
         },
     ]
 }
+
+/// Repli de démonstration pour la recherche de documents (hors feature `codex`).
+/// En build réel, `codex-file-search` balaie le disque à la place.
+#[cfg(not(feature = "codex"))]
+pub fn document_matches(root: &str, query: &str, limit: usize) -> Vec<DocumentMatch> {
+    let root = if root.trim().is_empty() { "~/Officine/Documents" } else { root.trim() };
+    let corpus = [
+        ("procedures/plan-assurance-qualite.pdf", "file"),
+        ("procedures/gestion-stupefiants.docx", "file"),
+        ("procedures/chaine-du-froid.pdf", "file"),
+        ("ordonnances/2026-09/bernard-jacques.pdf", "file"),
+        ("ordonnances/2026-09/moreau-lea.pdf", "file"),
+        ("formations/trod-angine-support.pptx", "file"),
+        ("reglementaire/registre-stupefiants-2026.xlsx", "file"),
+        ("fournisseurs/contrat-cerp.pdf", "file"),
+        ("archives", "directory"),
+    ];
+    let q = query.trim().to_lowercase();
+    corpus
+        .iter()
+        .filter(|(path, _)| q.is_empty() || path.to_lowercase().contains(&q))
+        .take(limit.max(1))
+        .enumerate()
+        .map(|(i, (path, kind))| DocumentMatch {
+            name: path.rsplit('/').next().unwrap_or(path).to_string(),
+            path: (*path).to_string(),
+            full_path: format!("{root}/{path}"),
+            score: (1000 - i as u32 * 40).max(10),
+            match_type: (*kind).to_string(),
+        })
+        .collect()
+}

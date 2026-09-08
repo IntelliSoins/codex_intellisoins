@@ -14,6 +14,7 @@ import type {
   DashboardSummary,
   DbEntity,
   DbRecord,
+  DocumentMatch,
   McpServer,
   PharmacyConnector,
   Reminder,
@@ -63,6 +64,10 @@ export const bridge = {
   // --- Base de données locale --------------------------------------------
   dbQuery: (entity: DbEntity, search: string) =>
     call<DbRecord[]>("db_query", { entity, search }, () => demo.dbQuery(entity, search)),
+
+  // --- Recherche de documents (codex-file-search) ------------------------
+  documentSearch: (root: string, query: string) =>
+    call<DocumentMatch[]>("document_search", { root, query }, () => demo.documentSearch(root, query)),
 
   // --- Connecteurs pharmacie ---------------------------------------------
   connectors: () => call<PharmacyConnector[]>("connectors_list", {}, () => demo.connectors),

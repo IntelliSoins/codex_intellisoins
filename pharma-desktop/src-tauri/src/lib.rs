@@ -25,6 +25,7 @@ pub fn run() {
             commands::reminders_toggle,
             commands::calendar_list,
             commands::db_query,
+            commands::document_search,
             commands::connectors_list,
             commands::connectors_sync,
             commands::mcp_servers,

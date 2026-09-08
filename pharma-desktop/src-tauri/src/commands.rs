@@ -132,6 +132,23 @@ pub fn db_query(state: State<AppState>, entity: String, search: String) -> Resul
     Ok(db::query(&entity, &search))
 }
 
+// --- Recherche de documents (codex-file-search) -----------------------------
+
+#[tauri::command]
+pub async fn document_search(
+    state: State<'_, AppState>,
+    root: String,
+    query: String,
+) -> Result<Vec<DocumentMatch>, String> {
+    // Même habilitation que la consultation des dossiers : la recherche
+    // documentaire peut exposer des données patient.
+    let role = state.user.lock().expect("verrou user").role;
+    security::require(role, Capability::ConsulterDossiers).map_err(|e| e.to_string())?;
+    codex_bridge::document_search(&root, &query, 30)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 // --- Connecteurs pharmacie --------------------------------------------------
 
 fn connectors_seed() -> Vec<PharmacyConnector> {

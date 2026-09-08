@@ -31,6 +31,10 @@ sqlx = { version = "0.9.0", default-features = false, features = [
     "sqlite-bundled",
 ] }
 
+# Recherche floue de documents locaux. Câblée : activée par la feature `codex`.
+# La crate vit dans ../../codex-rs/file-search (workspace codex-rs séparé).
+codex-file-search = { path = "../../codex-rs/file-search", optional = true }
+
 # --- Branchement sur le backend Rust codex-* --------------------------------
 # Décommentez au fur et à mesure du câblage de chaque module. Ces crates
 # vivent dans ../../codex-rs. Elles sont volumineuses : n'activez que ce
@@ -38,7 +42,6 @@ sqlx = { version = "0.9.0", default-features = false, features = [
 #
 # codex-core            = { path = "../../codex-rs/core" }              # agent / turns
 # codex-mcp             = { path = "../../codex-rs/codex-mcp" }         # serveurs MCP
-# codex-file-search     = { path = "../../codex-rs/file-search" }       # recherche floue documents
 # codex-agent-roles     = { path = "../../codex-rs/agent-roles" }       # RBAC propriétaire/salarié
 # codex-keyring-store   = { path = "../../codex-rs/keyring-store" }     # trousseau chiffré
 # codex-secrets         = { path = "../../codex-rs/secrets" }           # secrets scellés
@@ -48,4 +51,5 @@ sqlx = { version = "0.9.0", default-features = false, features = [
 
 [features]
 # Active le câblage réel des crates codex-* (voir codex_bridge.rs).
-codex = []
+# Chaque crate câblée est ajoutée ici au fur et à mesure.
+codex = ["dep:codex-file-search"]

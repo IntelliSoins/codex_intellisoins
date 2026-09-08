@@ -9,6 +9,7 @@ import type {
   DashboardSummary,
   DbEntity,
   DbRecord,
+  DocumentMatch,
   McpServer,
   PharmacyConnector,
   Reminder,
@@ -134,6 +135,34 @@ export function dbQuery(entity: DbEntity, search: string): DbRecord[] {
   if (!search.trim()) return rows
   const q = search.toLowerCase()
   return rows.filter((r) => Object.values(r.fields).some((v) => String(v).toLowerCase().includes(q)))
+}
+
+// Corpus fictif reflétant le repli Rust `data::document_matches`.
+const documentCorpus: Array<{ path: string; matchType: "file" | "directory" }> = [
+  { path: "procedures/plan-assurance-qualite.pdf", matchType: "file" },
+  { path: "procedures/gestion-stupefiants.docx", matchType: "file" },
+  { path: "procedures/chaine-du-froid.pdf", matchType: "file" },
+  { path: "ordonnances/2026-09/bernard-jacques.pdf", matchType: "file" },
+  { path: "ordonnances/2026-09/moreau-lea.pdf", matchType: "file" },
+  { path: "formations/trod-angine-support.pptx", matchType: "file" },
+  { path: "reglementaire/registre-stupefiants-2026.xlsx", matchType: "file" },
+  { path: "fournisseurs/contrat-cerp.pdf", matchType: "file" },
+  { path: "archives", matchType: "directory" },
+]
+
+export function documentSearch(root: string, query: string): DocumentMatch[] {
+  const base = root.trim() || "~/Officine/Documents"
+  const q = query.trim().toLowerCase()
+  return documentCorpus
+    .filter((d) => !q || d.path.toLowerCase().includes(q))
+    .slice(0, 30)
+    .map((d, i) => ({
+      name: d.path.split("/").pop() ?? d.path,
+      path: d.path,
+      fullPath: `${base}/${d.path}`,
+      score: Math.max(10, 1000 - i * 40),
+      matchType: d.matchType,
+    }))
 }
 
 export const connectors: PharmacyConnector[] = [

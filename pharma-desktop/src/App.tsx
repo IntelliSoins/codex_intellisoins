@@ -10,6 +10,7 @@ import { AssistantView } from "./views/AssistantView"
 import { WebSearchView } from "./views/WebSearchView"
 import { CalendarView } from "./views/CalendarView"
 import { DatabaseView } from "./views/DatabaseView"
+import { DocumentsView } from "./views/DocumentsView"
 import { ConnectorsView } from "./views/ConnectorsView"
 import { McpView } from "./views/McpView"
 import { BackendsView } from "./views/BackendsView"
@@ -47,6 +48,7 @@ export function App() {
           {current === "websearch" && <WebSearchView />}
           {current === "calendar" && <CalendarView />}
           {current === "database" && <DatabaseView />}
+          {current === "documents" && <DocumentsView />}
           {current === "connectors" && <ConnectorsView />}
           {current === "mcp" && <McpView />}
           {current === "backends" && <BackendsView />}

@@ -71,6 +71,18 @@ export interface DbRecord {
   fields: Record<string, string | number>
 }
 
+/** Résultat de la recherche floue de documents (codex-file-search). */
+export interface DocumentMatch {
+  name: string
+  /** Chemin relatif à la racine de recherche. */
+  path: string
+  /** Chemin absolu sur le poste. */
+  fullPath: string
+  /** Score de pertinence nucleo (plus élevé = plus pertinent). */
+  score: number
+  matchType: "file" | "directory"
+}
+
 export interface McpServer {
   id: string
   name: string

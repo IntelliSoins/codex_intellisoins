@@ -464,6 +464,17 @@ button {
 .muted {
   color: var(--muted);
 }
+.doc-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--primary);
+}
 
 .page-intro {
   color: var(--muted);

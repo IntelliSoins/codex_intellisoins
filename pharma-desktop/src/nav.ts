@@ -4,6 +4,7 @@ import {
   Globe,
   CalendarDays,
   Database,
+  FileSearch,
   Plug,
   Wrench,
   Cpu,
@@ -18,6 +19,7 @@ export type ViewKey =
   | "websearch"
   | "calendar"
   | "database"
+  | "documents"
   | "connectors"
   | "mcp"
   | "backends"
@@ -38,6 +40,7 @@ export const NAV: NavEntry[] = [
   { key: "websearch", label: "Recherche web", section: "Espace de travail", icon: Globe, roles: ["proprietaire", "salarie"] },
   { key: "calendar", label: "Calendrier & rappels", section: "Espace de travail", icon: CalendarDays, roles: ["proprietaire", "salarie"] },
   { key: "database", label: "Base de données", section: "Espace de travail", icon: Database, roles: ["proprietaire", "salarie"] },
+  { key: "documents", label: "Recherche documents", section: "Espace de travail", icon: FileSearch, roles: ["proprietaire", "salarie"] },
   { key: "connectors", label: "Connecteurs pharmacie", section: "Intégrations", icon: Plug, roles: ["proprietaire", "salarie"] },
   { key: "mcp", label: "Outils MCP", section: "Intégrations", icon: Wrench, roles: ["proprietaire", "salarie"] },
   { key: "backends", label: "Backends de calcul", section: "Intégrations", icon: Cpu, roles: ["proprietaire"] },
@@ -50,6 +53,7 @@ export const VIEW_TITLES: Record<ViewKey, { title: string; sub: string }> = {
   websearch: { title: "Recherche web", sub: "Sources santé fiables et à jour" },
   calendar: { title: "Calendrier & rappels", sub: "Rendez-vous, gardes et échéances" },
   database: { title: "Base de données locale", sub: "Patients, ordonnances, stock, fournisseurs" },
+  documents: { title: "Recherche de documents", sub: "Recherche floue locale via codex-file-search" },
   connectors: { title: "Connecteurs pharmacie", sub: "LGO, Dossier Pharmaceutique, grossistes" },
   mcp: { title: "Outils MCP", sub: "Serveurs Model Context Protocol" },
   backends: { title: "Backends de calcul", sub: "DGX Spark, Mac Silicon, LLM externes" },

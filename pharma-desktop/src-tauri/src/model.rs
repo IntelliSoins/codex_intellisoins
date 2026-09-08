@@ -92,6 +92,22 @@ pub struct DbRecord {
     pub fields: serde_json::Value,
 }
 
+/// Un document trouvé par la recherche floue (codex-file-search).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocumentMatch {
+    /// Nom de fichier affiché.
+    pub name: String,
+    /// Chemin relatif à la racine de recherche.
+    pub path: String,
+    /// Chemin absolu sur le poste.
+    pub full_path: String,
+    /// Score de pertinence (nucleo). Plus élevé = plus pertinent.
+    pub score: u32,
+    /// "file" ou "directory".
+    pub match_type: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct McpTool {
