@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissions par défaut du poste sécurisé PharmaCore.",
+  "windows": ["main"],
+  "permissions": ["core:default", "shell:allow-open"]
+}

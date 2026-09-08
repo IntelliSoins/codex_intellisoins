@@ -1,0 +1,51 @@
+[package]
+name = "pharma-desktop"
+version = "0.1.0"
+description = "Poste de travail sécurisé pour officines de pharmacie"
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "pharma_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+# Base locale chiffrée. Aligné sur la version utilisée par codex-rs.
+sqlx = { version = "0.9.0", default-features = false, features = [
+    "chrono",
+    "json",
+    "macros",
+    "migrate",
+    "runtime-tokio",
+    "sqlite-bundled",
+] }
+
+# --- Branchement sur le backend Rust codex-* --------------------------------
+# Décommentez au fur et à mesure du câblage de chaque module. Ces crates
+# vivent dans ../../codex-rs. Elles sont volumineuses : n'activez que ce
+# dont chaque commande a besoin pour garder les temps de compilation courts.
+#
+# codex-core            = { path = "../../codex-rs/core" }              # agent / turns
+# codex-mcp             = { path = "../../codex-rs/codex-mcp" }         # serveurs MCP
+# codex-file-search     = { path = "../../codex-rs/file-search" }       # recherche floue documents
+# codex-agent-roles     = { path = "../../codex-rs/agent-roles" }       # RBAC propriétaire/salarié
+# codex-keyring-store   = { path = "../../codex-rs/keyring-store" }     # trousseau chiffré
+# codex-secrets         = { path = "../../codex-rs/secrets" }           # secrets scellés
+# codex-sandboxing      = { path = "../../codex-rs/sandboxing" }        # exécution outils sous sandbox
+# codex-network-proxy   = { path = "../../codex-rs/network-proxy" }     # proxy réseau contrôlé (recherche web)
+# codex-model-provider  = { path = "../../codex-rs/model-provider" }    # sélection backend/LLM
+
+[features]
+# Active le câblage réel des crates codex-* (voir codex_bridge.rs).
+codex = []
