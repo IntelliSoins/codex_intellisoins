@@ -13,13 +13,13 @@ export function Topbar({ title, sub }: { title: string; sub: string }) {
 
   return (
     <header className="topbar">
-      <div className="topbar-title">
+      <div>
         <h1>{title}</h1>
         <div className="sub">{sub}</div>
       </div>
 
       <div className="topbar-right">
-        <div className="badge topbar-backend" style={{ padding: 0, border: "none" }}>
+        <div className="badge" style={{ padding: 0, border: "none" }}>
           <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
             <Cpu size={15} style={{ position: "absolute", left: 10, color: "var(--faint)" }} />
             <select
@@ -39,15 +39,15 @@ export function Topbar({ title, sub }: { title: string; sub: string }) {
           </div>
         </div>
         {active && (
-          <span className="badge topbar-latency">
+          <span className="badge">
             <StatusDot tone={toneFor(active.status)} />
             {active.externe ? "Externe" : "Local"} · {active.latencyMs} ms
           </span>
         )}
 
-        <div className="topbar-user" style={{ display: "flex", alignItems: "center", gap: 10, paddingLeft: 6, borderLeft: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, paddingLeft: 6, borderLeft: "1px solid var(--border)" }}>
           <div className="avatar">{initials}</div>
-          <div className="topbar-user-copy" style={{ lineHeight: 1.2 }}>
+          <div style={{ lineHeight: 1.2 }}>
             <div style={{ fontSize: 13, fontWeight: 600 }}>{user?.displayName}</div>
             <div className="sub" style={{ fontSize: 11 }}>
               {user?.role === "proprietaire" ? "Pharmacien propriétaire" : "Pharmacien salarié"}

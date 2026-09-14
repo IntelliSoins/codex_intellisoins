@@ -1308,19 +1308,19 @@ button {
 }
 
 @media (max-width: 1000px) {
-  .topbar-title {
+  .app:has(.workflow-page) .topbar > div:first-child {
     min-width: 0;
   }
 
-  .topbar-title h1,
-  .topbar-title .sub {
+  .app:has(.workflow-page) .topbar > div:first-child h1,
+  .app:has(.workflow-page) .topbar > div:first-child .sub {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .topbar-latency,
-  .topbar-user-copy {
+  .app:has(.workflow-page) .topbar-right > span.badge,
+  .app:has(.workflow-page) .topbar-right > div:last-child > div:last-child {
     display: none;
   }
 }

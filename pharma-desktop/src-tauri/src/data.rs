@@ -60,56 +60,20 @@ pub fn seed_backends() -> Vec<ComputeBackend> {
 }
 
 pub fn seed_reminders() -> Vec<Reminder> {
-    let r =
-        |id: &str, title: &str, due: &str, priority: &str, category: &str, done: bool| Reminder {
-            id: id.into(),
-            title: title.into(),
-            due: due.into(),
-            priority: priority.into(),
-            category: category.into(),
-            done,
-        };
+    let r = |id: &str, title: &str, due: &str, priority: &str, category: &str, done: bool| Reminder {
+        id: id.into(),
+        title: title.into(),
+        due: due.into(),
+        priority: priority.into(),
+        category: category.into(),
+        done,
+    };
     vec![
-        r(
-            "r-1",
-            "Renouvellement ordonnance — M. Bernard",
-            "Aujourd'hui 14:30",
-            "haute",
-            "ordonnance",
-            false,
-        ),
-        r(
-            "r-2",
-            "Commande grossiste avant 17h",
-            "Aujourd'hui 17:00",
-            "haute",
-            "stock",
-            false,
-        ),
-        r(
-            "r-3",
-            "Vérifier péremptions rayon B4",
-            "Aujourd'hui",
-            "normale",
-            "stock",
-            false,
-        ),
-        r(
-            "r-4",
-            "Déclaration de garde",
-            "Demain 09:00",
-            "normale",
-            "reglementaire",
-            false,
-        ),
-        r(
-            "r-6",
-            "Signer registre stupéfiants",
-            "Aujourd'hui 18:00",
-            "haute",
-            "reglementaire",
-            false,
-        ),
+        r("r-1", "Renouvellement ordonnance — M. Bernard", "Aujourd'hui 14:30", "haute", "ordonnance", false),
+        r("r-2", "Commande grossiste avant 17h", "Aujourd'hui 17:00", "haute", "stock", false),
+        r("r-3", "Vérifier péremptions rayon B4", "Aujourd'hui", "normale", "stock", false),
+        r("r-4", "Déclaration de garde", "Demain 09:00", "normale", "reglementaire", false),
+        r("r-6", "Signer registre stupéfiants", "Aujourd'hui 18:00", "haute", "reglementaire", false),
     ]
 }
 
@@ -127,17 +91,12 @@ pub fn seed_dashboard() -> DashboardSummary {
 
 pub fn web_results(query: &str) -> Vec<WebSearchResult> {
     let now = Utc::now().to_rfc3339();
-    let q = if query.trim().is_empty() {
-        "recommandations HAS"
-    } else {
-        query.trim()
-    };
+    let q = if query.trim().is_empty() { "recommandations HAS" } else { query.trim() };
     vec![
         WebSearchResult {
             title: format!("{q} — Haute Autorité de Santé"),
             url: "https://has-sante.fr".into(),
-            snippet: "Recommandations de bonne pratique et fiches de bon usage du médicament."
-                .into(),
+            snippet: "Recommandations de bonne pratique et fiches de bon usage du médicament.".into(),
             source: "has-sante.fr".into(),
             fetched_at: now.clone(),
         },
@@ -155,11 +114,7 @@ pub fn web_results(query: &str) -> Vec<WebSearchResult> {
 /// En build réel, `codex-file-search` balaie le disque à la place.
 #[cfg(not(feature = "codex"))]
 pub fn document_matches(root: &str, query: &str, limit: usize) -> Vec<DocumentMatch> {
-    let root = if root.trim().is_empty() {
-        "~/Officine/Documents"
-    } else {
-        root.trim()
-    };
+    let root = if root.trim().is_empty() { "~/Officine/Documents" } else { root.trim() };
     let corpus = [
         ("procedures/plan-assurance-qualite.pdf", "file"),
         ("procedures/gestion-stupefiants.docx", "file"),
