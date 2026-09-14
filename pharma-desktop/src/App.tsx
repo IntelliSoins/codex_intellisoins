@@ -9,6 +9,7 @@ import { DashboardView } from "./views/DashboardView"
 import { AssistantView } from "./views/AssistantView"
 import { WebSearchView } from "./views/WebSearchView"
 import { CalendarView } from "./views/CalendarView"
+import { PatientWorkflowsView } from "./views/PatientWorkflowsView"
 import { DatabaseView } from "./views/DatabaseView"
 import { DocumentsView } from "./views/DocumentsView"
 import { ConnectorsView } from "./views/ConnectorsView"
@@ -47,6 +48,7 @@ export function App() {
           {current === "assistant" && <AssistantView />}
           {current === "websearch" && <WebSearchView />}
           {current === "calendar" && <CalendarView />}
+          {current === "patient-workflows" && <PatientWorkflowsView />}
           {current === "database" && <DatabaseView />}
           {current === "documents" && <DocumentsView />}
           {current === "connectors" && <ConnectorsView />}

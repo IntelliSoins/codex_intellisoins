@@ -1,24 +1,19 @@
-import { useEffect, useState } from "react"
-import { AlertTriangle, Bell, CheckCircle2, Cpu, ListTodo, Plug, Bot, Globe } from "lucide-react"
+import { AlertTriangle, Bell, CheckCircle2, Cpu, ListTodo, Plug, Bot, Globe, Route } from "lucide-react"
+import useSWR from "swr"
 import { bridge } from "../lib/bridge"
-import type { ComputeBackend, DashboardSummary, PharmacyConnector, Reminder } from "../lib/types"
 import type { ViewKey } from "../nav"
 import { Badge, Card, StatCard, StatusDot, toneFor } from "../components/ui"
 
 export function DashboardView({ onNavigate }: { onNavigate: (v: ViewKey) => void }) {
-  const [summary, setSummary] = useState<DashboardSummary | null>(null)
-  const [reminders, setReminders] = useState<Reminder[]>([])
-  const [backends, setBackends] = useState<ComputeBackend[]>([])
-  const [connectors, setConnectors] = useState<PharmacyConnector[]>([])
-
-  useEffect(() => {
-    bridge.dashboard().then(setSummary)
-    bridge.reminders().then(setReminders)
-    bridge.backends().then(setBackends)
-    bridge.connectors().then(setConnectors)
-  }, [])
+  const { data: summary } = useSWR("dashboard-summary", bridge.dashboard)
+  const { data: reminders = [] } = useSWR("dashboard-reminders", bridge.reminders)
+  const { data: backends = [] } = useSWR("dashboard-backends", bridge.backends)
+  const { data: connectors = [] } = useSWR("dashboard-connectors", bridge.connectors)
+  const { data: workflows = [] } = useSWR("patient-workflows", bridge.patientWorkflows)
 
   const today = reminders.filter((r) => !r.done).slice(0, 5)
+  const activeWorkflows = workflows.filter((workflow) => workflow.status !== "clos").length
+  const workflowsToAnalyze = workflows.filter((workflow) => workflow.status === "a-analyser").length
 
   return (
     <div className="stack">
@@ -48,6 +43,24 @@ export function DashboardView({ onNavigate }: { onNavigate: (v: ViewKey) => void
           suffix={summary ? `/ ${summary.backendsTotal}` : undefined}
         />
       </div>
+
+      <Card
+        icon={Route}
+        title="Parcours patients"
+        action={<button className="btn ghost sm" onClick={() => onNavigate("patient-workflows")}>Ouvrir la file</button>}
+      >
+        <div className="workflow-dashboard-summary">
+          <div>
+            <strong>{activeWorkflows}</strong>
+            <span>dossiers actifs</span>
+          </div>
+          <div className={workflowsToAnalyze > 0 ? "attention" : ""}>
+            <strong>{workflowsToAnalyze}</strong>
+            <span>à analyser</span>
+          </div>
+          <p>Du questionnaire au conseil consigné, avec validation pharmacien à chaque décision.</p>
+        </div>
+      </Card>
 
       <div className="grid cols-2">
         <Card icon={Bell} title="Rappels du jour" action={<button className="btn ghost sm" onClick={() => onNavigate("calendar")}>Tout voir</button>}>
@@ -105,6 +118,9 @@ export function DashboardView({ onNavigate }: { onNavigate: (v: ViewKey) => void
           </button>
           <button className="btn" onClick={() => onNavigate("websearch")}>
             <Globe size={16} /> Recherche santé
+          </button>
+          <button className="btn" onClick={() => onNavigate("patient-workflows")}>
+            <Route size={16} /> Parcours patients
           </button>
           <button className="btn" onClick={() => onNavigate("database")}>
             <CheckCircle2 size={16} /> Vérifier une ordonnance

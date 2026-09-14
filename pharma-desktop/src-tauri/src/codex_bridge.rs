@@ -56,7 +56,11 @@ pub async fn web_search(query: &str) -> Vec<WebSearchResult> {
 /// bloquant, on le déporte donc sur un thread `spawn_blocking` pour ne pas
 /// figer la boucle async de Tauri.
 #[cfg(feature = "codex")]
-pub async fn document_search(root: &str, query: &str, limit: usize) -> anyhow::Result<Vec<DocumentMatch>> {
+pub async fn document_search(
+    root: &str,
+    query: &str,
+    limit: usize,
+) -> anyhow::Result<Vec<DocumentMatch>> {
     use codex_file_search::{run, FileSearchOptions, MatchType};
     use std::num::NonZero;
     use std::path::PathBuf;
@@ -97,7 +101,11 @@ pub async fn document_search(root: &str, query: &str, limit: usize) -> anyhow::R
 
 /// Repli hors feature `codex` : renvoie des documents fictifs pour l'aperçu.
 #[cfg(not(feature = "codex"))]
-pub async fn document_search(root: &str, query: &str, limit: usize) -> anyhow::Result<Vec<DocumentMatch>> {
+pub async fn document_search(
+    root: &str,
+    query: &str,
+    limit: usize,
+) -> anyhow::Result<Vec<DocumentMatch>> {
     Ok(data::document_matches(root, query, limit))
 }
 
@@ -114,8 +122,16 @@ pub async fn mcp_servers() -> Vec<McpServer> {
             command: "codex-mcp --server vidal".into(),
             status: "connecte".into(),
             tools: vec![
-                McpTool { name: "interactions_medicamenteuses".into(), description: "Analyse d'interactions entre molécules".into(), dangerous: false },
-                McpTool { name: "posologie_reference".into(), description: "Posologies recommandées par tranche d'âge".into(), dangerous: false },
+                McpTool {
+                    name: "interactions_medicamenteuses".into(),
+                    description: "Analyse d'interactions entre molécules".into(),
+                    dangerous: false,
+                },
+                McpTool {
+                    name: "posologie_reference".into(),
+                    description: "Posologies recommandées par tranche d'âge".into(),
+                    dangerous: false,
+                },
             ],
         },
         McpServer {
@@ -124,7 +140,11 @@ pub async fn mcp_servers() -> Vec<McpServer> {
             transport: "stdio".into(),
             command: "codex-file-search".into(),
             status: "connecte".into(),
-            tools: vec![McpTool { name: "recherche_documents".into(), description: "Recherche floue dans les documents de l'officine".into(), dangerous: false }],
+            tools: vec![McpTool {
+                name: "recherche_documents".into(),
+                description: "Recherche floue dans les documents de l'officine".into(),
+                dangerous: false,
+            }],
         },
         McpServer {
             id: "m-shell".into(),
@@ -132,7 +152,11 @@ pub async fn mcp_servers() -> Vec<McpServer> {
             transport: "stdio".into(),
             command: "codex-exec-server".into(),
             status: "deconnecte".into(),
-            tools: vec![McpTool { name: "executer_commande".into(), description: "Exécute une commande système (sous sandbox)".into(), dangerous: true }],
+            tools: vec![McpTool {
+                name: "executer_commande".into(),
+                description: "Exécute une commande système (sous sandbox)".into(),
+                dangerous: true,
+            }],
         },
     ]
 }

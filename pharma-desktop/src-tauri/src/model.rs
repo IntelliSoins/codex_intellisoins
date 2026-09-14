@@ -150,6 +150,80 @@ pub struct AuditEntry {
     pub severity: String,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum WorkflowChannel {
+    #[serde(rename = "sms")]
+    Sms,
+    #[serde(rename = "email")]
+    Email,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum WorkflowStatus {
+    #[serde(rename = "en-cours")]
+    EnCours,
+    #[serde(rename = "en-attente-patient")]
+    EnAttentePatient,
+    #[serde(rename = "a-analyser")]
+    AAnalyser,
+    #[serde(rename = "a-conseiller")]
+    AConseiller,
+    #[serde(rename = "clos")]
+    Clos,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct PatientWorkflow {
+    pub id: String,
+    pub patient_display: String,
+    pub reason: String,
+    pub channel: WorkflowChannel,
+    pub current_step: u8,
+    pub status: WorkflowStatus,
+    pub alert_count: u32,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowEvent {
+    pub id: i64,
+    pub at: String,
+    pub actor: String,
+    pub action: String,
+    pub note: String,
+    pub from_step: u8,
+    pub to_step: u8,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct PatientWorkflowDetail {
+    pub workflow: PatientWorkflow,
+    pub questionnaire_note: Option<String>,
+    pub collection_summary: Option<String>,
+    pub analysis_draft: Option<String>,
+    pub advice_summary: Option<String>,
+    pub events: Vec<WorkflowEvent>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreatePatientWorkflowInput {
+    pub patient_display: String,
+    pub reason: String,
+    pub channel: WorkflowChannel,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdvancePatientWorkflowInput {
+    pub id: String,
+    pub content: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DashboardSummary {

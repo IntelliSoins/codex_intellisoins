@@ -4,6 +4,7 @@ import {
   Globe,
   CalendarDays,
   Database,
+  Route,
   FileSearch,
   Plug,
   Wrench,
@@ -18,6 +19,7 @@ export type ViewKey =
   | "assistant"
   | "websearch"
   | "calendar"
+  | "patient-workflows"
   | "database"
   | "documents"
   | "connectors"
@@ -39,6 +41,7 @@ export const NAV: NavEntry[] = [
   { key: "assistant", label: "Assistant IA", section: "Espace de travail", icon: Bot, roles: ["proprietaire", "salarie"] },
   { key: "websearch", label: "Recherche web", section: "Espace de travail", icon: Globe, roles: ["proprietaire", "salarie"] },
   { key: "calendar", label: "Calendrier & rappels", section: "Espace de travail", icon: CalendarDays, roles: ["proprietaire", "salarie"] },
+  { key: "patient-workflows", label: "Parcours patients", section: "Espace de travail", icon: Route, roles: ["proprietaire", "salarie"] },
   { key: "database", label: "Base de données", section: "Espace de travail", icon: Database, roles: ["proprietaire", "salarie"] },
   { key: "documents", label: "Recherche documents", section: "Espace de travail", icon: FileSearch, roles: ["proprietaire", "salarie"] },
   { key: "connectors", label: "Connecteurs pharmacie", section: "Intégrations", icon: Plug, roles: ["proprietaire", "salarie"] },
@@ -52,6 +55,7 @@ export const VIEW_TITLES: Record<ViewKey, { title: string; sub: string }> = {
   assistant: { title: "Assistant IA", sub: "Agent d'aide au workflow officinal" },
   websearch: { title: "Recherche web", sub: "Sources santé fiables et à jour" },
   calendar: { title: "Calendrier & rappels", sub: "Rendez-vous, gardes et échéances" },
+  "patient-workflows": { title: "Parcours patients", sub: "Questionnaire, collecte, analyse et conseil" },
   database: { title: "Base de données locale", sub: "Patients, ordonnances, stock, fournisseurs" },
   documents: { title: "Recherche de documents", sub: "Recherche floue locale via codex-file-search" },
   connectors: { title: "Connecteurs pharmacie", sub: "LGO, Dossier Pharmaceutique, grossistes" },

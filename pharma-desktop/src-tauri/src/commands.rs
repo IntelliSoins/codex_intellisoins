@@ -8,6 +8,7 @@ use crate::codex_bridge;
 use crate::data;
 use crate::db;
 use crate::model::*;
+use crate::patient_workflow;
 use crate::security::{self, Capability};
 use crate::state::AppState;
 use chrono::Utc;
@@ -37,20 +38,50 @@ pub fn lock_vault(state: State<AppState>) -> SessionUser {
 #[tauri::command]
 pub fn audit_log() -> Vec<AuditEntry> {
     let now = Utc::now().to_rfc3339();
-    let e = |id: &str, actor: &str, role: Role, action: &str, target: &str, severity: &str| AuditEntry {
-        id: id.into(),
-        at: now.clone(),
-        actor: actor.into(),
-        role,
-        action: action.into(),
-        target: target.into(),
-        severity: severity.into(),
+    let e = |id: &str, actor: &str, role: Role, action: &str, target: &str, severity: &str| {
+        AuditEntry {
+            id: id.into(),
+            at: now.clone(),
+            actor: actor.into(),
+            role,
+            action: action.into(),
+            target: target.into(),
+            severity: severity.into(),
+        }
     };
     vec![
-        e("a-1", "Dr. Amélie Rousseau", Role::Proprietaire, "Déverrouillage du coffre", "vault", "info"),
-        e("a-2", "Karim Salhi", Role::Salarie, "Consultation ordonnance", "o-1", "info"),
-        e("a-3", "système", Role::Proprietaire, "Échec connexion MSSanté", "c-mss", "avertissement"),
-        e("a-4", "Karim Salhi", Role::Salarie, "Tentative d'accès registre stupéfiants refusée", "registre-stup", "critique"),
+        e(
+            "a-1",
+            "Dr. Amélie Rousseau",
+            Role::Proprietaire,
+            "Déverrouillage du coffre",
+            "vault",
+            "info",
+        ),
+        e(
+            "a-2",
+            "Karim Salhi",
+            Role::Salarie,
+            "Consultation ordonnance",
+            "o-1",
+            "info",
+        ),
+        e(
+            "a-3",
+            "système",
+            Role::Proprietaire,
+            "Échec connexion MSSanté",
+            "c-mss",
+            "avertissement",
+        ),
+        e(
+            "a-4",
+            "Karim Salhi",
+            Role::Salarie,
+            "Tentative d'accès registre stupéfiants refusée",
+            "registre-stup",
+            "critique",
+        ),
     ]
 }
 
@@ -115,9 +146,21 @@ pub fn calendar_list() -> Vec<CalendarEvent> {
         kind: kind.into(),
     };
     vec![
-        e("e-1", "Entretien pharmaceutique — asthme", "10:00", "10:30", "rdv"),
+        e(
+            "e-1",
+            "Entretien pharmaceutique — asthme",
+            "10:00",
+            "10:30",
+            "rdv",
+        ),
         e("e-2", "Livraison CERP", "11:15", "11:30", "livraison"),
-        e("e-3", "Bilan de médication — M. Petit", "14:30", "15:00", "rdv"),
+        e(
+            "e-3",
+            "Bilan de médication — M. Petit",
+            "14:30",
+            "15:00",
+            "rdv",
+        ),
         e("e-4", "Garde de nuit", "20:00", "08:00", "garde"),
     ]
 }
@@ -125,7 +168,11 @@ pub fn calendar_list() -> Vec<CalendarEvent> {
 // --- Base de données locale -------------------------------------------------
 
 #[tauri::command]
-pub fn db_query(state: State<AppState>, entity: String, search: String) -> Result<Vec<DbRecord>, String> {
+pub fn db_query(
+    state: State<AppState>,
+    entity: String,
+    search: String,
+) -> Result<Vec<DbRecord>, String> {
     // Garde-fou : consultation des dossiers soumise à habilitation.
     let role = state.user.lock().expect("verrou user").role;
     security::require(role, Capability::ConsulterDossiers).map_err(|e| e.to_string())?;
@@ -149,23 +196,115 @@ pub async fn document_search(
         .map_err(|e| e.to_string())
 }
 
+// --- Parcours patients ------------------------------------------------------
+
+fn workflow_user(
+    state: &State<'_, AppState>,
+    capability: Capability,
+) -> Result<SessionUser, String> {
+    let user = state.user.lock().expect("verrou user").clone();
+    security::require_unlocked(&user, capability).map_err(|error| error.to_string())?;
+    Ok(user)
+}
+
+#[tauri::command]
+pub async fn patient_workflows_list(
+    state: State<'_, AppState>,
+) -> Result<Vec<PatientWorkflow>, String> {
+    workflow_user(&state, Capability::ConsulterDossiers)?;
+    patient_workflow::list(&state.database)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn patient_workflow_detail(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<PatientWorkflowDetail, String> {
+    workflow_user(&state, Capability::ConsulterDossiers)?;
+    patient_workflow::detail(&state.database, &id)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn patient_workflow_create(
+    state: State<'_, AppState>,
+    input: CreatePatientWorkflowInput,
+) -> Result<PatientWorkflowDetail, String> {
+    let user = workflow_user(&state, Capability::Delivrer)?;
+    patient_workflow::create(&state.database, input, &user.display_name)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub async fn patient_workflow_advance(
+    state: State<'_, AppState>,
+    input: AdvancePatientWorkflowInput,
+) -> Result<PatientWorkflowDetail, String> {
+    let user = workflow_user(&state, Capability::Delivrer)?;
+    patient_workflow::advance(&state.database, input, &user.display_name)
+        .await
+        .map_err(|error| error.to_string())
+}
+
 // --- Connecteurs pharmacie --------------------------------------------------
 
 fn connectors_seed() -> Vec<PharmacyConnector> {
-    let c = |id: &str, name: &str, vendor: &str, category: &str, status: &str, last: Option<&str>| PharmacyConnector {
-        id: id.into(),
-        name: name.into(),
-        vendor: vendor.into(),
-        category: category.into(),
-        status: status.into(),
-        last_sync: last.map(|s| s.to_string()),
-    };
+    let c =
+        |id: &str, name: &str, vendor: &str, category: &str, status: &str, last: Option<&str>| {
+            PharmacyConnector {
+                id: id.into(),
+                name: name.into(),
+                vendor: vendor.into(),
+                category: category.into(),
+                status: status.into(),
+                last_sync: last.map(|s| s.to_string()),
+            }
+        };
     vec![
-        c("c-lgo", "LGPI Winpharma", "Pharmagest", "lgo", "connecte", Some("il y a 3 min")),
-        c("c-dp", "Dossier Pharmaceutique", "CNOP", "dossier-pharmaceutique", "connecte", Some("il y a 12 min")),
-        c("c-cerp", "CERP EDI", "CERP", "grossiste", "connecte", Some("il y a 1 min")),
-        c("c-tlt", "Télétransmission SESAM-Vitale", "GIE Sesam-Vitale", "teletransmission", "a-configurer", None),
-        c("c-mss", "Messagerie Sécurisée Santé", "MSSanté", "messagerie-securisee", "erreur", Some("il y a 2 h")),
+        c(
+            "c-lgo",
+            "LGPI Winpharma",
+            "Pharmagest",
+            "lgo",
+            "connecte",
+            Some("il y a 3 min"),
+        ),
+        c(
+            "c-dp",
+            "Dossier Pharmaceutique",
+            "CNOP",
+            "dossier-pharmaceutique",
+            "connecte",
+            Some("il y a 12 min"),
+        ),
+        c(
+            "c-cerp",
+            "CERP EDI",
+            "CERP",
+            "grossiste",
+            "connecte",
+            Some("il y a 1 min"),
+        ),
+        c(
+            "c-tlt",
+            "Télétransmission SESAM-Vitale",
+            "GIE Sesam-Vitale",
+            "teletransmission",
+            "a-configurer",
+            None,
+        ),
+        c(
+            "c-mss",
+            "Messagerie Sécurisée Santé",
+            "MSSanté",
+            "messagerie-securisee",
+            "erreur",
+            Some("il y a 2 h"),
+        ),
     ]
 }
 

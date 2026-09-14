@@ -7,15 +7,19 @@
 // démonstration pour que l'interface reste pleinement navigable.
 
 import type {
+  AdvancePatientWorkflowInput,
   AgentMessage,
   AuditEntry,
   CalendarEvent,
+  CreatePatientWorkflowInput,
   ComputeBackend,
   DashboardSummary,
   DbEntity,
   DbRecord,
   DocumentMatch,
   McpServer,
+  PatientWorkflow,
+  PatientWorkflowDetail,
   PharmacyConnector,
   Reminder,
   SessionUser,
@@ -68,6 +72,16 @@ export const bridge = {
   // --- Recherche de documents (codex-file-search) ------------------------
   documentSearch: (root: string, query: string) =>
     call<DocumentMatch[]>("document_search", { root, query }, () => demo.documentSearch(root, query)),
+
+  // --- Parcours patients --------------------------------------------------
+  patientWorkflows: () =>
+    call<PatientWorkflow[]>("patient_workflows_list", {}, () => demo.patientWorkflowList()),
+  patientWorkflowDetail: (id: string) =>
+    call<PatientWorkflowDetail>("patient_workflow_detail", { id }, () => demo.patientWorkflowDetail(id)),
+  createPatientWorkflow: (input: CreatePatientWorkflowInput) =>
+    call<PatientWorkflowDetail>("patient_workflow_create", { input }, () => demo.createPatientWorkflow(input)),
+  advancePatientWorkflow: (input: AdvancePatientWorkflowInput) =>
+    call<PatientWorkflowDetail>("patient_workflow_advance", { input }, () => demo.advancePatientWorkflow(input)),
 
   // --- Connecteurs pharmacie ---------------------------------------------
   connectors: () => call<PharmacyConnector[]>("connectors_list", {}, () => demo.connectors),

@@ -2,17 +2,22 @@
 // Aucune donnée réelle de patient : ce sont des exemples fictifs.
 
 import type {
+  AdvancePatientWorkflowInput,
   AgentMessage,
   AuditEntry,
   CalendarEvent,
+  CreatePatientWorkflowInput,
   ComputeBackend,
   DashboardSummary,
   DbEntity,
   DbRecord,
   DocumentMatch,
   McpServer,
+  PatientWorkflow,
+  PatientWorkflowDetail,
   PharmacyConnector,
   Reminder,
+  WorkflowStatus,
   SessionUser,
   WebSearchResult,
 } from "./types"
@@ -165,6 +170,158 @@ export function documentSearch(root: string, query: string): DocumentMatch[] {
     }))
 }
 
+const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString()
+
+let workflowEventId = 10
+const workflowDetails: PatientWorkflowDetail[] = [
+  {
+    workflow: {
+      id: "wf-demo-lea",
+      patientDisplay: "Léa Moreau",
+      reason: "Suivi tensionnel et observance",
+      channel: "sms",
+      currentStep: 3,
+      status: "a-analyser",
+      alertCount: 1,
+      createdAt: minutesAgo(75),
+      updatedAt: minutesAgo(18),
+    },
+    questionnaireNote: "Questionnaire envoyé après accord oral.",
+    collectionSummary: "Tension irrégulière, deux oublis déclarés cette semaine.",
+    analysisDraft: null,
+    adviceSummary: null,
+    events: [
+      { id: 3, at: minutesAgo(18), actor: "Léa Moreau", action: "Collecte patient enregistrée", note: "Deux oublis et une mesure élevée signalés.", fromStep: 2, toStep: 3 },
+      { id: 2, at: minutesAgo(62), actor: "Dr. Amélie Rousseau", action: "Questionnaire envoyé", note: "Envoi par SMS après accord oral.", fromStep: 1, toStep: 2 },
+      { id: 1, at: minutesAgo(75), actor: "Dr. Amélie Rousseau", action: "Dossier créé", note: "Parcours officinal initialisé.", fromStep: 0, toStep: 1 },
+    ],
+  },
+  {
+    workflow: {
+      id: "wf-demo-marcel",
+      patientDisplay: "Marcel Petit",
+      reason: "Bilan de médication",
+      channel: "email",
+      currentStep: 2,
+      status: "en-attente-patient",
+      alertCount: 0,
+      createdAt: minutesAgo(180),
+      updatedAt: minutesAgo(120),
+    },
+    questionnaireNote: "Questionnaire envoyé à l’aidante désignée.",
+    collectionSummary: null,
+    analysisDraft: null,
+    adviceSummary: null,
+    events: [
+      { id: 5, at: minutesAgo(120), actor: "Karim Salhi", action: "Questionnaire envoyé", note: "Envoi par courriel à l’aidante désignée.", fromStep: 1, toStep: 2 },
+      { id: 4, at: minutesAgo(180), actor: "Karim Salhi", action: "Dossier créé", note: "Parcours officinal initialisé.", fromStep: 0, toStep: 1 },
+    ],
+  },
+  {
+    workflow: {
+      id: "wf-demo-nora",
+      patientDisplay: "Nora Benali",
+      reason: "Conseil suite à un TROD angine",
+      channel: "sms",
+      currentStep: 4,
+      status: "a-conseiller",
+      alertCount: 0,
+      createdAt: minutesAgo(90),
+      updatedAt: minutesAgo(42),
+    },
+    questionnaireNote: "Questionnaire remis au comptoir.",
+    collectionSummary: "Symptômes depuis 48 h, aucune allergie rapportée.",
+    analysisDraft: "Orientation médicale recommandée selon les réponses collectées.",
+    adviceSummary: null,
+    events: [
+      { id: 8, at: minutesAgo(42), actor: "Dr. Amélie Rousseau", action: "Analyse validée par le pharmacien", note: "Orientation médicale recommandée.", fromStep: 3, toStep: 4 },
+      { id: 7, at: minutesAgo(65), actor: "Nora Benali", action: "Collecte patient enregistrée", note: "Réponses reçues au comptoir.", fromStep: 2, toStep: 3 },
+      { id: 6, at: minutesAgo(90), actor: "Dr. Amélie Rousseau", action: "Dossier créé", note: "Parcours officinal initialisé.", fromStep: 0, toStep: 1 },
+    ],
+  },
+]
+
+function cloneWorkflowDetail(detail: PatientWorkflowDetail): PatientWorkflowDetail {
+  return {
+    ...detail,
+    workflow: { ...detail.workflow },
+    events: detail.events.map((event) => ({ ...event })),
+  }
+}
+
+export function patientWorkflowList(): PatientWorkflow[] {
+  return workflowDetails
+    .map(({ workflow }) => ({ ...workflow }))
+    .sort((left, right) => Number(left.status === "clos") - Number(right.status === "clos") || right.updatedAt.localeCompare(left.updatedAt))
+}
+
+export function patientWorkflowDetail(id: string): PatientWorkflowDetail {
+  const detail = workflowDetails.find(({ workflow }) => workflow.id === id)
+  if (!detail) throw new Error("Dossier introuvable")
+  return cloneWorkflowDetail(detail)
+}
+
+export function createPatientWorkflow(input: CreatePatientWorkflowInput): PatientWorkflowDetail {
+  if (!input.patientDisplay.trim() || !input.reason.trim()) throw new Error("Le patient et le motif sont obligatoires")
+  const at = now()
+  const detail: PatientWorkflowDetail = {
+    workflow: {
+      id: `wf-${Date.now()}`,
+      patientDisplay: input.patientDisplay.trim(),
+      reason: input.reason.trim(),
+      channel: input.channel,
+      currentStep: 1,
+      status: "en-cours",
+      alertCount: 0,
+      createdAt: at,
+      updatedAt: at,
+    },
+    questionnaireNote: null,
+    collectionSummary: null,
+    analysisDraft: null,
+    adviceSummary: null,
+    events: [{ id: ++workflowEventId, at, actor: "Dr. Amélie Rousseau", action: "Dossier créé", note: "Parcours officinal initialisé.", fromStep: 0, toStep: 1 }],
+  }
+  workflowDetails.unshift(detail)
+  return cloneWorkflowDetail(detail)
+}
+
+export function advancePatientWorkflow(input: AdvancePatientWorkflowInput): PatientWorkflowDetail {
+  const detail = workflowDetails.find(({ workflow }) => workflow.id === input.id)
+  if (!detail) throw new Error("Dossier introuvable")
+  if (!input.content.trim()) throw new Error("Une synthèse est requise pour valider cette étape")
+  if (detail.workflow.status === "clos") throw new Error("Ce dossier est déjà clôturé")
+
+  const transitions: Record<number, { nextStep: 1 | 2 | 3 | 4; status: WorkflowStatus; action: string }> = {
+    1: { nextStep: 2, status: "en-attente-patient", action: "Questionnaire envoyé" },
+    2: { nextStep: 3, status: "a-analyser", action: "Collecte patient enregistrée" },
+    3: { nextStep: 4, status: "a-conseiller", action: "Analyse validée par le pharmacien" },
+    4: { nextStep: 4, status: "clos", action: "Conseil consigné et dossier clôturé" },
+  }
+  const currentStep = detail.workflow.currentStep
+  const transition = transitions[currentStep]
+  if (!transition) throw new Error("État du parcours invalide")
+  const content = input.content.trim()
+  if (currentStep === 1) detail.questionnaireNote = content
+  if (currentStep === 2) detail.collectionSummary = content
+  if (currentStep === 3) detail.analysisDraft = content
+  if (currentStep === 4) detail.adviceSummary = content
+  const at = now()
+  detail.workflow.currentStep = transition.nextStep
+  detail.workflow.status = transition.status
+  detail.workflow.updatedAt = at
+  detail.events.unshift({
+    id: ++workflowEventId,
+    at,
+    actor: "Dr. Amélie Rousseau",
+    action: transition.action,
+    note: content,
+    fromStep: currentStep,
+    toStep: transition.nextStep,
+  })
+  return cloneWorkflowDetail(detail)
+}
+
 export const connectors: PharmacyConnector[] = [
   { id: "c-lgo", name: "LGPI Winpharma", vendor: "Pharmagest", category: "lgo", status: "connecte", lastSync: "il y a 3 min" },
   { id: "c-dp", name: "Dossier Pharmaceutique", vendor: "CNOP", category: "dossier-pharmaceutique", status: "connecte", lastSync: "il y a 12 min" },
@@ -224,10 +381,14 @@ export function assistantReply(input: string, backendId: string): AgentMessage {
   const prefix = backend?.externe
     ? "[Backend externe — données pseudonymisées avant envoi] "
     : `[${backend?.label ?? "backend local"}] `
+  const isWorkflowDraft = input.includes("brouillon concis de note d’analyse officinale")
+  const content = isWorkflowDraft
+    ? "Observations : les réponses fictives signalent une observance irrégulière et une mesure à recontrôler.\n\nPoints de vigilance : vérifier les modalités de prise, rechercher un effet indésirable et confirmer les mesures dans des conditions adaptées.\n\nProposition à valider : reprendre les conseils d’observance, organiser un suivi rapproché et orienter vers le prescripteur si le signal persiste."
+    : canned[input.toLowerCase()] ?? canned.default
   return {
     id: `msg-${Date.now()}`,
     role: "assistant",
-    content: prefix + (canned[input.toLowerCase()] ?? canned.default),
+    content: prefix + content,
     createdAt: now(),
     backendId,
   }

@@ -4,7 +4,7 @@
 //! rôles/capacités, `codex-keyring-store` + `codex-secrets` pour le
 //! déverrouillage réel du coffre chiffré.
 
-use crate::model::Role;
+use crate::model::{Role, SessionUser};
 
 /// Capacités protégées du poste. Le frontend masque déjà les vues, mais
 /// chaque commande sensible DOIT revérifier ici côté backend.
@@ -44,6 +44,16 @@ pub fn require(role: Role, capability: Capability) -> Result<(), SecurityError> 
         Ok(())
     } else {
         Err(SecurityError::Forbidden)
+    }
+}
+
+/// Vérifie à la fois le rôle et l'état du coffre pour une opération sensible.
+pub fn require_unlocked(user: &SessionUser, capability: Capability) -> Result<(), SecurityError> {
+    require(user.role, capability)?;
+    if user.vault_unlocked {
+        Ok(())
+    } else {
+        Err(SecurityError::VaultLocked)
     }
 }
 

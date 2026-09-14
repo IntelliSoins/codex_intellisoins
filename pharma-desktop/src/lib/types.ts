@@ -83,6 +83,56 @@ export interface DocumentMatch {
   matchType: "file" | "directory"
 }
 
+export type WorkflowChannel = "sms" | "email"
+export type WorkflowStatus =
+  | "en-cours"
+  | "en-attente-patient"
+  | "a-analyser"
+  | "a-conseiller"
+  | "clos"
+
+export interface PatientWorkflow {
+  id: string
+  patientDisplay: string
+  reason: string
+  channel: WorkflowChannel
+  currentStep: 1 | 2 | 3 | 4
+  status: WorkflowStatus
+  alertCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface WorkflowEvent {
+  id: number
+  at: string
+  actor: string
+  action: string
+  note: string
+  fromStep: number
+  toStep: number
+}
+
+export interface PatientWorkflowDetail {
+  workflow: PatientWorkflow
+  questionnaireNote: string | null
+  collectionSummary: string | null
+  analysisDraft: string | null
+  adviceSummary: string | null
+  events: WorkflowEvent[]
+}
+
+export interface CreatePatientWorkflowInput {
+  patientDisplay: string
+  reason: string
+  channel: WorkflowChannel
+}
+
+export interface AdvancePatientWorkflowInput {
+  id: string
+  content: string
+}
+
 export interface McpServer {
   id: string
   name: string
